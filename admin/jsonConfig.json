@@ -60,7 +60,9 @@
             "sm": 12,
             "md": 4,
             "jsonData": "{\"ip\": \"${data.ip}\"}",
-            "alsoDependsOn": ["ip"]
+            "alsoDependsOn": ["ip"],
+            "useAdapter": true,
+            "showProcess": true
         }
     }
 }

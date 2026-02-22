@@ -282,17 +282,26 @@ class PanasonicViera extends utils.Adapter {
             try {
                 const ip = obj.message && obj.message.ip || this.config.ip;
                 if (!ip) {
-                    this.sendTo(obj.from, obj.command, { result: false, error: 'No IP address provided' }, obj.callback);
+                    this.sendTo(obj.from, obj.command, {
+                        result: '<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#f44336"></span><span style="font-size:16px;font-weight:bold;color:#f44336">Keine IP-Adresse eingegeben</span></div>',
+                    }, obj.callback);
                     return;
                 }
                 const testClient = new VieraClient(ip, this.log);
                 const available = await testClient.isAvailable();
-                this.sendTo(obj.from, obj.command, {
-                    result: available,
-                    error: available ? null : 'TV is not reachable. Make sure the TV is on and TV Remote App is enabled in network settings.',
-                }, obj.callback);
+                if (available) {
+                    this.sendTo(obj.from, obj.command, {
+                        result: `<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#4caf50"></span><span style="font-size:16px;font-weight:bold;color:#4caf50">OK — TV erreichbar (${ip})</span></div>`,
+                    }, obj.callback);
+                } else {
+                    this.sendTo(obj.from, obj.command, {
+                        result: '<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#f44336"></span><span style="font-size:16px;font-weight:bold;color:#f44336">Nicht erreichbar — TV eingeschaltet? TV Remote App aktiviert?</span></div>',
+                    }, obj.callback);
+                }
             } catch (err) {
-                this.sendTo(obj.from, obj.command, { result: false, error: err.message }, obj.callback);
+                this.sendTo(obj.from, obj.command, {
+                    result: `<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#f44336"></span><span style="font-size:16px;font-weight:bold;color:#f44336">Fehler: ${err.message}</span></div>`,
+                }, obj.callback);
             }
         }
     }
