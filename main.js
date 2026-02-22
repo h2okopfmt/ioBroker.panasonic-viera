@@ -208,6 +208,7 @@ class PanasonicViera extends utils.Adapter {
                 if (nrcCode) {
                     this.log.debug(`Sending key: ${nrcCode}`);
                     await this.client.sendKey(nrcCode);
+                    await this.setStateAsync(id, false, true);
                 }
                 return;
             }
