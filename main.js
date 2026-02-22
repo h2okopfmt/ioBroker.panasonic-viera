@@ -337,7 +337,11 @@ class PanasonicViera extends utils.Adapter {
             return {
                 identifier: device.identifier || deviceIds[0],
                 address: device.address,
-                credentials: device.credentials || {},
+                credentials: {
+                    mrp: device.mrpCredentials || '',
+                    airplay: device.airplayCredentials || '',
+                    companion: device.companionCredentials || '',
+                },
             };
         } catch (_) {
             return null;
