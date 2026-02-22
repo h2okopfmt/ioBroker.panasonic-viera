@@ -47,10 +47,18 @@
     },
     "native": {
         "ip": "",
-        "appleTvInstance": "apple-tv.0",
         "pollingInterval": 15,
         "connectionStatus": "",
-        "connectionMessage": ""
+        "connectionMessage": "",
+        "useAppleTv": false,
+        "appleTvIdentifier": "",
+        "appleTvAddress": "",
+        "appleTvName": "",
+        "appleTvAirplayCredentials": "",
+        "appleTvCompanionCredentials": "",
+        "appleTvMrpCredentials": "",
+        "pairProtocol": "airplay",
+        "pairPin": ""
     },
     "objects": [],
     "instanceObjects": [

@@ -10,7 +10,7 @@
         },
         "_help": {
             "type": "staticText",
-            "text": "Stelle sicher, dass am TV unter Menü → Netzwerk → TV Remote App aktiviert ist. Zum Einschalten kann ein Apple TV per HDMI-CEC genutzt werden.",
+            "text": "Stelle sicher, dass am TV unter Men\u00fc \u2192 Netzwerk \u2192 TV Remote App aktiviert ist.",
             "sm": 12,
             "style": {
                 "marginBottom": 16
@@ -62,19 +62,7 @@
             "sm": 12,
             "md": 6,
             "placeholder": "192.168.1.100",
-            "help": "Die IP-Adresse deines Panasonic Viera TVs. Findbar unter Menü → Netzwerk → Netzwerkstatus."
-        },
-        "appleTvInstance": {
-            "type": "text",
-            "label": "Apple TV Instanz (optional, für TV einschalten)",
-            "sm": 12,
-            "md": 6,
-            "placeholder": "apple-tv.0",
-            "help": "Optional: Die ioBroker-Instanz des Apple TV Adapters. Wenn ein Apple TV per HDMI am TV hängt, kann es den TV per HDMI-CEC einschalten. Leer lassen wenn kein Apple TV vorhanden."
-        },
-        "_divider1": {
-            "type": "divider",
-            "sm": 12
+            "help": "Die IP-Adresse deines Panasonic Viera TVs. Findbar unter Men\u00fc \u2192 Netzwerk \u2192 Netzwerkstatus."
         },
         "pollingInterval": {
             "type": "number",
@@ -86,7 +74,7 @@
             "step": 1,
             "help": "Wie oft der TV-Status (Volume, Mute, Erreichbarkeit) abgefragt wird. Standard: 15 Sekunden."
         },
-        "_divider2": {
+        "_divider1": {
             "type": "divider",
             "sm": 12
         },
@@ -104,11 +92,146 @@
             "useAdapter": true,
             "showProcess": true
         },
+        "_divider2": {
+            "type": "divider",
+            "sm": 12
+        },
+        "useAppleTv": {
+            "type": "checkbox",
+            "label": "Apple TV zum Einschalten nutzen (HDMI-CEC)",
+            "sm": 12,
+            "help": "Wenn aktiviert, wird der TV \u00fcber ein Apple TV per HDMI-CEC eingeschaltet."
+        },
+        "_header_atv": {
+            "type": "header",
+            "text": "Apple TV Einstellungen",
+            "size": 4,
+            "sm": 12,
+            "hidden": "!data.useAppleTv"
+        },
+        "_atvHelp": {
+            "type": "staticText",
+            "text": "Zuerst Apple TV im Netzwerk suchen, dann AirPlay und Companion pairen.",
+            "sm": 12,
+            "hidden": "!data.useAppleTv",
+            "style": {
+                "marginBottom": 12
+            }
+        },
+        "_atvStatus": {
+            "type": "staticText",
+            "text": "Apple TV: ${data.appleTvName || 'Nicht gescannt'} (${data.appleTvAddress || '?'})",
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier",
+            "sm": 12,
+            "style": {
+                "fontSize": 14,
+                "padding": "4px 0"
+            }
+        },
+        "_atvCredStatus": {
+            "type": "staticText",
+            "text": "AirPlay: ${data.appleTvAirplayCredentials ? '\uD83D\uDFE2 gepairt' : '\uD83D\uDD34 nicht gepairt'}  |  Companion: ${data.appleTvCompanionCredentials ? '\uD83D\uDFE2 gepairt' : '\uD83D\uDD34 nicht gepairt'}",
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier",
+            "sm": 12,
+            "style": {
+                "fontSize": 14,
+                "padding": "4px 0 12px 0"
+            }
+        },
+        "_scanButton": {
+            "type": "sendTo",
+            "label": "Apple TV suchen",
+            "command": "scanAppleTv",
+            "variant": "contained",
+            "color": "primary",
+            "icon": "search",
+            "sm": 12,
+            "md": 4,
+            "hidden": "!data.useAppleTv",
+            "useAdapter": true,
+            "showProcess": true
+        },
+        "_divider3": {
+            "type": "divider",
+            "sm": 12,
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+        },
+        "pairProtocol": {
+            "type": "select",
+            "label": "Protokoll zum Pairen",
+            "sm": 12,
+            "md": 4,
+            "options": [
+                {"label": "AirPlay", "value": "airplay"},
+                {"label": "Companion", "value": "companion"}
+            ],
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+        },
+        "_pairButton": {
+            "type": "sendTo",
+            "label": "Pairing starten",
+            "command": "startPairing",
+            "variant": "contained",
+            "color": "secondary",
+            "sm": 12,
+            "md": 4,
+            "jsonData": "{\"protocol\": \"${data.pairProtocol}\"}",
+            "alsoDependsOn": ["pairProtocol"],
+            "useAdapter": true,
+            "showProcess": true,
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+        },
+        "pairPin": {
+            "type": "text",
+            "label": "PIN (vom Apple TV Screen)",
+            "sm": 12,
+            "md": 4,
+            "placeholder": "1234",
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+        },
+        "_pinButton": {
+            "type": "sendTo",
+            "label": "PIN absenden",
+            "command": "submitPin",
+            "variant": "contained",
+            "color": "secondary",
+            "sm": 12,
+            "md": 4,
+            "jsonData": "{\"pin\": \"${data.pairPin}\", \"protocol\": \"${data.pairProtocol}\"}",
+            "alsoDependsOn": ["pairPin", "pairProtocol"],
+            "useAdapter": true,
+            "showProcess": true,
+            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+        },
         "connectionStatus": {
             "type": "text",
             "hidden": true
         },
         "connectionMessage": {
+            "type": "text",
+            "hidden": true
+        },
+        "appleTvIdentifier": {
+            "type": "text",
+            "hidden": true
+        },
+        "appleTvAddress": {
+            "type": "text",
+            "hidden": true
+        },
+        "appleTvName": {
+            "type": "text",
+            "hidden": true
+        },
+        "appleTvAirplayCredentials": {
+            "type": "text",
+            "hidden": true
+        },
+        "appleTvCompanionCredentials": {
+            "type": "text",
+            "hidden": true
+        },
+        "appleTvMrpCredentials": {
             "type": "text",
             "hidden": true
         }

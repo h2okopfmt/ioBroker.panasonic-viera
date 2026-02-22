@@ -70,6 +70,7 @@ class PanasonicViera extends utils.Adapter {
         this.client = null;
         this.pollingTimer = null;
         this.tvAvailable = false;
+        this._pairProcess = null;
 
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
@@ -217,18 +218,20 @@ class PanasonicViera extends utils.Adapter {
             // Power
             if (stateName === 'power') {
                 if (state.val) {
-                    // Power ON - try Apple TV HDMI-CEC if configured
-                    const appleTvConfig = await this._getAppleTvConfig();
-                    if (appleTvConfig) {
-                        this.log.info('Powering on TV via Apple TV HDMI-CEC...');
-                        try {
-                            await VieraClient.turnOnAppleTv(appleTvConfig, this.log);
-                            this.log.info('Apple TV wake sent');
-                        } catch (err) {
-                            this.log.error(`Apple TV turn_on failed: ${err.message}`);
+                    // Power ON - try Apple TV HDMI-CEC if enabled
+                    if (this.config.useAppleTv) {
+                        const appleTvConfig = this._getAppleTvConfig();
+                        if (appleTvConfig) {
+                            this.log.info('Powering on TV via Apple TV HDMI-CEC...');
+                            try {
+                                await VieraClient.turnOnAppleTv(appleTvConfig, this.log);
+                                this.log.info('Apple TV wake sent');
+                            } catch (err) {
+                                this.log.error(`Apple TV turn_on failed: ${err.message}`);
+                            }
                         }
                     } else {
-                        this.log.warn('Cannot power on: No Apple TV adapter found. Install apple-tv adapter for power-on via HDMI-CEC.');
+                        this.log.warn('Power on not possible: Apple TV not configured. Enable in adapter settings.');
                     }
                 } else {
                     // Power OFF via SOAP
@@ -291,9 +294,7 @@ class PanasonicViera extends utils.Adapter {
                 const ip = obj.message && obj.message.ip || this.config.ip;
                 if (!ip) {
                     await this._saveConnectionStatus('error', 'Keine IP-Adresse eingegeben');
-                    this.sendTo(obj.from, obj.command, {
-                        result: '\uD83D\uDD34  Keine IP-Adresse eingegeben',
-                    }, obj.callback);
+                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Keine IP-Adresse eingegeben' }, obj.callback);
                     return;
                 }
                 const testClient = new VieraClient(ip, this.log);
@@ -301,44 +302,115 @@ class PanasonicViera extends utils.Adapter {
                 const msg = available ? `OK \u2014 TV erreichbar (${ip})` : 'Nicht erreichbar \u2014 TV eingeschaltet? TV Remote App aktiviert?';
                 const emoji = available ? '\uD83D\uDFE2' : '\uD83D\uDD34';
                 await this._saveConnectionStatus(available ? 'ok' : 'error', msg);
-                this.sendTo(obj.from, obj.command, {
-                    result: `${emoji}  ${msg}`,
-                }, obj.callback);
+                this.sendTo(obj.from, obj.command, { result: `${emoji}  ${msg}` }, obj.callback);
             } catch (err) {
                 await this._saveConnectionStatus('error', `Fehler: ${err.message}`);
-                this.sendTo(obj.from, obj.command, {
-                    result: `\uD83D\uDD34  Fehler: ${err.message}`,
-                }, obj.callback);
+                this.sendTo(obj.from, obj.command, { result: `\uD83D\uDD34  Fehler: ${err.message}` }, obj.callback);
+            }
+        }
+
+        if (obj.command === 'scanAppleTv') {
+            try {
+                const devices = await VieraClient.scanAppleTvs(this.log);
+                if (devices.length === 0) {
+                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Kein Apple TV gefunden' }, obj.callback);
+                } else {
+                    const list = devices.map(d => `${d.name} (${d.address})`).join(', ');
+                    // Save first device info to config
+                    const dev = devices[0];
+                    await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+                        native: { appleTvIdentifier: dev.identifier, appleTvAddress: dev.address, appleTvName: dev.name },
+                    });
+                    this.sendTo(obj.from, obj.command, { result: `\uD83D\uDFE2  Gefunden: ${list}` }, obj.callback);
+                }
+            } catch (err) {
+                this.sendTo(obj.from, obj.command, { result: `\uD83D\uDD34  Scan fehlgeschlagen: ${err.message}` }, obj.callback);
+            }
+        }
+
+        if (obj.command === 'startPairing') {
+            try {
+                const protocol = (obj.message && obj.message.protocol) || 'airplay';
+                const identifier = this.config.appleTvIdentifier;
+                const address = this.config.appleTvAddress;
+                if (!identifier && !address) {
+                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Erst Apple TV scannen!' }, obj.callback);
+                    return;
+                }
+                // Kill old process
+                if (this._pairProcess) {
+                    try { this._pairProcess.kill('SIGTERM'); } catch (_) {}
+                    this._pairProcess = null;
+                }
+                const result = await VieraClient.pairStart(identifier, address, protocol, this.log);
+                if (result.status === 'awaitingPin') {
+                    this._pairProcess = result.process;
+                    this.sendTo(obj.from, obj.command, { result: `\uD83D\uDFE2  PIN wird auf dem Apple TV angezeigt. Bitte eingeben und absenden.` }, obj.callback);
+                } else if (result.status === 'paired') {
+                    await this._storePairCredentials(protocol, result.credentials);
+                    this.sendTo(obj.from, obj.command, { result: `\uD83D\uDFE2  Pairing erfolgreich (ohne PIN)!` }, obj.callback);
+                }
+            } catch (err) {
+                this.sendTo(obj.from, obj.command, { result: `\uD83D\uDD34  Pairing fehlgeschlagen: ${err.message}` }, obj.callback);
+            }
+        }
+
+        if (obj.command === 'submitPin') {
+            try {
+                const pin = obj.message && obj.message.pin;
+                const protocol = (obj.message && obj.message.protocol) || 'airplay';
+                if (!pin) {
+                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Kein PIN eingegeben' }, obj.callback);
+                    return;
+                }
+                if (!this._pairProcess) {
+                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Kein aktiver Pairing-Prozess. Erst Pairing starten!' }, obj.callback);
+                    return;
+                }
+                const result = await VieraClient.pairFinish(this._pairProcess, String(pin), this.log);
+                this._pairProcess = null;
+                if (result.credentials) {
+                    await this._storePairCredentials(protocol, result.credentials);
+                    this.sendTo(obj.from, obj.command, { result: `\uD83D\uDFE2  ${protocol}-Pairing erfolgreich! Credentials gespeichert.` }, obj.callback);
+                } else {
+                    this.sendTo(obj.from, obj.command, { result: `\uD83D\uDD34  Pairing abgeschlossen aber keine Credentials erhalten` }, obj.callback);
+                }
+            } catch (err) {
+                this._pairProcess = null;
+                this.sendTo(obj.from, obj.command, { result: `\uD83D\uDD34  PIN fehlgeschlagen: ${err.message}` }, obj.callback);
             }
         }
     }
 
-    async _getAppleTvConfig() {
-        try {
-            const appleTvInstance = this.config.appleTvInstance || 'apple-tv.0';
-            const obj = await this.getForeignObjectAsync(`system.adapter.${appleTvInstance}`);
-            if (!obj || !obj.native || !obj.native.devices) {
-                return null;
-            }
-            const devices = obj.native.devices;
-            const deviceIds = Object.keys(devices);
-            if (deviceIds.length === 0) {
-                return null;
-            }
-            const device = devices[deviceIds[0]];
-            this.log.debug(`Using Apple TV device: ${device.name || deviceIds[0]} (${device.address})`);
-            return {
-                identifier: device.identifier || deviceIds[0],
-                address: device.address,
-                credentials: {
-                    mrp: device.mrpCredentials || '',
-                    airplay: device.airplayCredentials || '',
-                    companion: device.companionCredentials || '',
-                },
-            };
-        } catch (_) {
+    async _storePairCredentials(protocol, credentials) {
+        const field = protocol === 'companion' ? 'appleTvCompanionCredentials'
+            : protocol === 'airplay' ? 'appleTvAirplayCredentials'
+                : 'appleTvMrpCredentials';
+        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+            native: { [field]: credentials },
+        });
+        this.log.info(`Stored ${protocol} credentials`);
+    }
+
+    _getAppleTvConfig() {
+        const id = this.config.appleTvIdentifier;
+        const addr = this.config.appleTvAddress;
+        if (!id && !addr) return null;
+        const airplay = this.config.appleTvAirplayCredentials || '';
+        const companion = this.config.appleTvCompanionCredentials || '';
+        if (!airplay && !companion) {
+            this.log.warn('Apple TV not paired yet. Go to adapter settings and pair first.');
             return null;
         }
+        return {
+            identifier: id || '',
+            address: addr || '',
+            credentials: {
+                mrp: this.config.appleTvMrpCredentials || '',
+                airplay,
+                companion,
+            },
+        };
     }
 
     async _saveConnectionStatus(status, message) {
@@ -356,6 +428,10 @@ class PanasonicViera extends utils.Adapter {
             if (this.pollingTimer) {
                 this.clearInterval(this.pollingTimer);
                 this.pollingTimer = null;
+            }
+            if (this._pairProcess) {
+                try { this._pairProcess.kill('SIGTERM'); } catch (_) {}
+                this._pairProcess = null;
             }
             this.setState('info.connection', false, true);
         } catch (e) {
