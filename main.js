@@ -145,11 +145,12 @@ class PanasonicViera extends utils.Adapter {
 
         // Create all remote button states
         for (const [key, nrcCode] of Object.entries(REMOTE_KEYS)) {
-            await this.setObjectNotExistsAsync(`remote.${key}`, {
+            await this.setObjectAsync(`remote.${key}`, {
                 type: 'state',
-                common: { name: key, type: 'boolean', role: 'button', read: false, write: true },
+                common: { name: key, type: 'boolean', role: 'button', read: true, write: true, def: false },
                 native: { nrcCode },
             });
+            await this.setStateAsync(`remote.${key}`, false, true);
         }
     }
 
