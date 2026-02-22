@@ -103,6 +103,14 @@
             "alsoDependsOn": ["ip"],
             "useAdapter": true,
             "showProcess": true
+        },
+        "connectionStatus": {
+            "type": "text",
+            "hidden": true
+        },
+        "connectionMessage": {
+            "type": "text",
+            "hidden": true
         }
     }
 }
