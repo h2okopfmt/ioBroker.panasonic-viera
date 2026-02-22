@@ -1,0 +1,26 @@
+{
+    "name": "iobroker.panasonic-viera",
+    "version": "0.1.0",
+    "description": "Control Panasonic Viera TVs from ioBroker via SOAP/UPnP",
+    "author": "Markus",
+    "license": "MIT",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"No tests yet\""
+    },
+    "keywords": [
+        "ioBroker",
+        "panasonic",
+        "viera",
+        "smart home",
+        "tv",
+        "remote",
+        "multimedia"
+    ],
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "dependencies": {
+        "@iobroker/adapter-core": "^3.0.0"
+    }
+}

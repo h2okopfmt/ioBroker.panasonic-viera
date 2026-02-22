@@ -1,0 +1,66 @@
+{
+    "i18n": false,
+    "type": "panel",
+    "items": {
+        "_header_tv": {
+            "type": "header",
+            "text": "Panasonic Viera TV Einstellungen",
+            "size": 3,
+            "sm": 12
+        },
+        "_help": {
+            "type": "staticText",
+            "text": "Stelle sicher, dass am TV unter Menü → Netzwerk → TV Remote App aktiviert ist. Für Wake-on-LAN muss der TV per Ethernet (LAN-Kabel) verbunden sein und unter Menü → Netzwerk → Wake on LAN aktiviert sein.",
+            "sm": 12,
+            "style": {
+                "marginBottom": 16
+            }
+        },
+        "ip": {
+            "type": "text",
+            "label": "IP-Adresse des TVs",
+            "sm": 12,
+            "md": 6,
+            "placeholder": "192.168.1.100",
+            "help": "Die IP-Adresse deines Panasonic Viera TVs. Findbar unter Menü → Netzwerk → Netzwerkstatus."
+        },
+        "mac": {
+            "type": "text",
+            "label": "MAC-Adresse (für Wake-on-LAN)",
+            "sm": 12,
+            "md": 6,
+            "placeholder": "AA:BB:CC:DD:EE:FF",
+            "help": "Die MAC-Adresse des TVs. Wird zum Einschalten per Wake-on-LAN benötigt. Findbar unter Menü → Netzwerk → Netzwerkstatus."
+        },
+        "_divider1": {
+            "type": "divider",
+            "sm": 12
+        },
+        "pollingInterval": {
+            "type": "number",
+            "label": "Abfrageintervall (Sekunden)",
+            "sm": 12,
+            "md": 6,
+            "min": 5,
+            "max": 300,
+            "step": 1,
+            "help": "Wie oft der TV-Status (Volume, Mute, Erreichbarkeit) abgefragt wird. Standard: 15 Sekunden."
+        },
+        "_divider2": {
+            "type": "divider",
+            "sm": 12
+        },
+        "_testButton": {
+            "type": "sendTo",
+            "label": "Verbindung testen",
+            "command": "testConnection",
+            "variant": "contained",
+            "color": "primary",
+            "icon": "wifi",
+            "sm": 12,
+            "md": 4,
+            "jsonData": "{\"ip\": \"${data.ip}\"}",
+            "alsoDependsOn": ["ip"]
+        }
+    }
+}

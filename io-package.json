@@ -1,0 +1,77 @@
+{
+    "common": {
+        "name": "panasonic-viera",
+        "version": "0.1.0",
+        "titleLang": {
+            "en": "Panasonic Viera TV",
+            "de": "Panasonic Viera TV"
+        },
+        "desc": {
+            "en": "Control Panasonic Viera TVs via network (SOAP/UPnP)",
+            "de": "Panasonic Viera TVs über das Netzwerk steuern (SOAP/UPnP)"
+        },
+        "authors": ["Markus"],
+        "keywords": ["panasonic", "viera", "tv", "remote", "multimedia"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "main": "main.js",
+        "icon": "panasonic-viera.png",
+        "enabled": true,
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "multimedia",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "json"
+        },
+        "dependencies": [
+            {
+                "js-controller": ">=5.0.0"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=6.0.0"
+            }
+        ],
+        "messagebox": true,
+        "supportedMessages": {
+            "custom": true
+        }
+    },
+    "native": {
+        "ip": "",
+        "mac": "",
+        "pollingInterval": 15
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Adapter Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "name": "TV connected",
+                "type": "boolean",
+                "role": "indicator.connected",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
+}
