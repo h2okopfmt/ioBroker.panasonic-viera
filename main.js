@@ -226,7 +226,11 @@ class PanasonicViera extends utils.Adapter {
                             const delay = (this.config.switchDelay !== undefined ? this.config.switchDelay : 2);
                             if (delay > 0) {
                                 this.log.info(`Apple TV wake sent, switching to TV in ${delay}s (with retries)...`);
-                                this.setTimeout(() => this._switchToTvWithRetry(5), delay * 1000);
+                                this.setTimeout(() => {
+                                    this._switchToTvWithRetry(5).catch((err) => {
+                                        this.log.error(`TV switch retry error: ${err.message}`);
+                                    });
+                                }, delay * 1000);
                             } else {
                                 this.log.info('Apple TV wake sent (TV switch disabled)');
                             }
@@ -290,19 +294,21 @@ class PanasonicViera extends utils.Adapter {
     }
 
     async _switchToTvWithRetry(retries) {
+        this.log.info(`Starting TV tuner switch (up to ${retries} attempts)...`);
         for (let i = 0; i < retries; i++) {
             try {
+                this.log.info(`TV switch attempt ${i + 1}/${retries}...`);
                 await this.client.sendKey('NRC_TV-ONOFF');
-                this.log.info('Switched to TV tuner');
+                this.log.info('Switched to TV tuner successfully');
                 return;
             } catch (err) {
-                this.log.debug(`TV switch attempt ${i + 1}/${retries} failed: ${err.message}`);
+                this.log.warn(`TV switch attempt ${i + 1}/${retries} failed: ${err.message}`);
                 if (i < retries - 1) {
                     await new Promise((r) => setTimeout(r, 2000));
                 }
             }
         }
-        this.log.warn('Could not switch to TV tuner after all retries');
+        this.log.error('Could not switch to TV tuner after all retries');
     }
 
     async onMessage(obj) {
