@@ -222,8 +222,8 @@ class PanasonicViera extends utils.Adapter {
                         this.log.warn('Cannot power on: No MAC address configured');
                         return;
                     }
-                    this.log.info(`Sending Wake-on-LAN to ${mac}`);
-                    await VieraClient.sendWakeOnLan(mac);
+                    this.log.info(`Sending Wake-on-LAN to ${mac} (broadcast via ${this.config.ip})`);
+                    await VieraClient.sendWakeOnLan(mac, this.config.ip);
                 } else {
                     // Power OFF via SOAP
                     this.log.info('Sending power off command');
