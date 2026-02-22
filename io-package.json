@@ -18,7 +18,7 @@
         },
         "platform": "Javascript/Node.js",
         "main": "main.js",
-        "icon": "panasonic-viera.svg",
+        "icon": "panasonic-viera.png",
         "enabled": true,
         "loglevel": "info",
         "tier": 3,
