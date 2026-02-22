@@ -389,6 +389,8 @@ class PanasonicViera extends utils.Adapter {
         await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
             native: { [field]: credentials },
         });
+        // Update in-memory config so credentials are available without restart
+        this.config[field] = credentials;
         this.log.info(`Stored ${protocol} credentials`);
     }
 
