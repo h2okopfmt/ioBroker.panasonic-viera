@@ -283,7 +283,7 @@ class PanasonicViera extends utils.Adapter {
                 const ip = obj.message && obj.message.ip || this.config.ip;
                 if (!ip) {
                     this.sendTo(obj.from, obj.command, {
-                        result: '<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#f44336"></span><span style="font-size:16px;font-weight:bold;color:#f44336">Keine IP-Adresse eingegeben</span></div>',
+                        result: '\uD83D\uDD34  Keine IP-Adresse eingegeben',
                     }, obj.callback);
                     return;
                 }
@@ -291,16 +291,16 @@ class PanasonicViera extends utils.Adapter {
                 const available = await testClient.isAvailable();
                 if (available) {
                     this.sendTo(obj.from, obj.command, {
-                        result: `<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#4caf50"></span><span style="font-size:16px;font-weight:bold;color:#4caf50">OK — TV erreichbar (${ip})</span></div>`,
+                        result: `\uD83D\uDFE2  OK \u2014 TV erreichbar (${ip})`,
                     }, obj.callback);
                 } else {
                     this.sendTo(obj.from, obj.command, {
-                        result: '<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#f44336"></span><span style="font-size:16px;font-weight:bold;color:#f44336">Nicht erreichbar — TV eingeschaltet? TV Remote App aktiviert?</span></div>',
+                        result: '\uD83D\uDD34  Nicht erreichbar \u2014 TV eingeschaltet? TV Remote App aktiviert?',
                     }, obj.callback);
                 }
             } catch (err) {
                 this.sendTo(obj.from, obj.command, {
-                    result: `<div style="display:flex;align-items:center;gap:12px;margin:8px 0"><span style="display:inline-block;width:28px;height:28px;border-radius:50%;background:#f44336"></span><span style="font-size:16px;font-weight:bold;color:#f44336">Fehler: ${err.message}</span></div>`,
+                    result: `\uD83D\uDD34  Fehler: ${err.message}`,
                 }, obj.callback);
             }
         }
