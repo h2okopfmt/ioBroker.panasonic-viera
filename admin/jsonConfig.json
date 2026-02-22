@@ -10,7 +10,7 @@
         },
         "_help": {
             "type": "staticText",
-            "text": "Stelle sicher, dass am TV unter Menü → Netzwerk → TV Remote App aktiviert ist. Für Wake-on-LAN muss der TV per Ethernet (LAN-Kabel) verbunden sein und unter Menü → Netzwerk → Wake on LAN aktiviert sein.",
+            "text": "Stelle sicher, dass am TV unter Menü → Netzwerk → TV Remote App aktiviert ist. Zum Einschalten kann ein Apple TV per HDMI-CEC genutzt werden.",
             "sm": 12,
             "style": {
                 "marginBottom": 16
@@ -64,13 +64,13 @@
             "placeholder": "192.168.1.100",
             "help": "Die IP-Adresse deines Panasonic Viera TVs. Findbar unter Menü → Netzwerk → Netzwerkstatus."
         },
-        "mac": {
+        "appleTvInstance": {
             "type": "text",
-            "label": "MAC-Adresse (für Wake-on-LAN)",
+            "label": "Apple TV Instanz (optional, für TV einschalten)",
             "sm": 12,
             "md": 6,
-            "placeholder": "AA:BB:CC:DD:EE:FF",
-            "help": "Die MAC-Adresse des TVs. Wird zum Einschalten per Wake-on-LAN benötigt. Findbar unter Menü → Netzwerk → Netzwerkstatus."
+            "placeholder": "apple-tv.0",
+            "help": "Optional: Die ioBroker-Instanz des Apple TV Adapters. Wenn ein Apple TV per HDMI am TV hängt, kann es den TV per HDMI-CEC einschalten. Leer lassen wenn kein Apple TV vorhanden."
         },
         "_divider1": {
             "type": "divider",

@@ -47,7 +47,7 @@
     },
     "native": {
         "ip": "",
-        "mac": "",
+        "appleTvInstance": "apple-tv.0",
         "pollingInterval": 15,
         "connectionStatus": "",
         "connectionMessage": ""

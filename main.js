@@ -216,14 +216,27 @@ class PanasonicViera extends utils.Adapter {
             // Power
             if (stateName === 'power') {
                 if (state.val) {
-                    // Power ON via Wake-on-LAN
-                    const mac = this.config.mac;
-                    if (!mac) {
-                        this.log.warn('Cannot power on: No MAC address configured');
-                        return;
+                    // Power ON - try Apple TV HDMI-CEC if configured
+                    const appleTvConfig = await this._getAppleTvConfig();
+                    if (appleTvConfig) {
+                        this.log.info('Powering on TV via Apple TV HDMI-CEC...');
+                        try {
+                            await VieraClient.turnOnAppleTv(appleTvConfig, this.log);
+                            this.log.info('Apple TV turn_on sent, waiting 8s for TV to start...');
+                            this.setTimeout(async () => {
+                                try {
+                                    await this.client.sendKey('NRC_TV-ONOFF');
+                                    this.log.info('Switched to TV tuner');
+                                } catch (err) {
+                                    this.log.warn(`Could not switch to TV tuner: ${err.message}`);
+                                }
+                            }, 8000);
+                        } catch (err) {
+                            this.log.error(`Apple TV turn_on failed: ${err.message}`);
+                        }
+                    } else {
+                        this.log.warn('Cannot power on: No Apple TV adapter found. Install apple-tv adapter for power-on via HDMI-CEC.');
                     }
-                    this.log.info(`Sending Wake-on-LAN to ${mac} (broadcast via ${this.config.ip})`);
-                    await VieraClient.sendWakeOnLan(mac, this.config.ip);
                 } else {
                     // Power OFF via SOAP
                     this.log.info('Sending power off command');
@@ -304,6 +317,30 @@ class PanasonicViera extends utils.Adapter {
                     result: `\uD83D\uDD34  Fehler: ${err.message}`,
                 }, obj.callback);
             }
+        }
+    }
+
+    async _getAppleTvConfig() {
+        try {
+            const appleTvInstance = this.config.appleTvInstance || 'apple-tv.0';
+            const obj = await this.getForeignObjectAsync(`system.adapter.${appleTvInstance}`);
+            if (!obj || !obj.native || !obj.native.devices) {
+                return null;
+            }
+            const devices = obj.native.devices;
+            const deviceIds = Object.keys(devices);
+            if (deviceIds.length === 0) {
+                return null;
+            }
+            const device = devices[deviceIds[0]];
+            this.log.debug(`Using Apple TV device: ${device.name || deviceIds[0]} (${device.address})`);
+            return {
+                identifier: device.identifier || deviceIds[0],
+                address: device.address,
+                credentials: device.credentials || {},
+            };
+        } catch (_) {
+            return null;
         }
     }
 
