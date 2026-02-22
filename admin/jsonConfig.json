@@ -111,38 +111,36 @@
         },
         "_atvHelp": {
             "type": "staticText",
-            "text": "Zuerst Apple TV im Netzwerk suchen, dann AirPlay und Companion pairen.",
+            "text": "Apple TV IP-Adresse und Identifier eingeben (oder Scan versuchen), dann AirPlay und Companion pairen.",
             "sm": 12,
             "hidden": "!data.useAppleTv",
             "style": {
                 "marginBottom": 12
             }
         },
-        "_atvStatus": {
-            "type": "staticText",
-            "text": "Apple TV: ${data.appleTvName || 'Nicht gescannt'} (${data.appleTvAddress || '?'})",
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier",
+        "appleTvAddress": {
+            "type": "text",
+            "label": "Apple TV IP-Adresse",
             "sm": 12,
-            "style": {
-                "fontSize": 14,
-                "padding": "4px 0"
-            }
+            "md": 4,
+            "placeholder": "192.168.1.47",
+            "hidden": "!data.useAppleTv",
+            "help": "IP-Adresse des Apple TV. Findbar unter Apple TV \u2192 Einstellungen \u2192 Netzwerk."
         },
-        "_atvCredStatus": {
-            "type": "staticText",
-            "text": "AirPlay: ${data.appleTvAirplayCredentials ? '\uD83D\uDFE2 gepairt' : '\uD83D\uDD34 nicht gepairt'}  |  Companion: ${data.appleTvCompanionCredentials ? '\uD83D\uDFE2 gepairt' : '\uD83D\uDD34 nicht gepairt'}",
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier",
+        "appleTvIdentifier": {
+            "type": "text",
+            "label": "Apple TV Identifier (MAC)",
             "sm": 12,
-            "style": {
-                "fontSize": 14,
-                "padding": "4px 0 12px 0"
-            }
+            "md": 4,
+            "placeholder": "AA:BB:CC:DD:EE:FF",
+            "hidden": "!data.useAppleTv",
+            "help": "Identifier/MAC des Apple TV. Wird beim Scan automatisch eingetragen."
         },
         "_scanButton": {
             "type": "sendTo",
             "label": "Apple TV suchen",
             "command": "scanAppleTv",
-            "variant": "contained",
+            "variant": "outlined",
             "color": "primary",
             "icon": "search",
             "sm": 12,
@@ -151,10 +149,20 @@
             "useAdapter": true,
             "showProcess": true
         },
+        "_atvCredStatus": {
+            "type": "staticText",
+            "text": "AirPlay: ${data.appleTvAirplayCredentials ? '\uD83D\uDFE2 gepairt' : '\uD83D\uDD34 nicht gepairt'}  |  Companion: ${data.appleTvCompanionCredentials ? '\uD83D\uDFE2 gepairt' : '\uD83D\uDD34 nicht gepairt'}",
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)",
+            "sm": 12,
+            "style": {
+                "fontSize": 14,
+                "padding": "4px 0 12px 0"
+            }
+        },
         "_divider3": {
             "type": "divider",
             "sm": 12,
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
         },
         "pairProtocol": {
             "type": "select",
@@ -165,7 +173,7 @@
                 {"label": "AirPlay", "value": "airplay"},
                 {"label": "Companion", "value": "companion"}
             ],
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
         },
         "_pairButton": {
             "type": "sendTo",
@@ -179,7 +187,7 @@
             "alsoDependsOn": ["pairProtocol"],
             "useAdapter": true,
             "showProcess": true,
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
         },
         "pairPin": {
             "type": "text",
@@ -187,7 +195,7 @@
             "sm": 12,
             "md": 4,
             "placeholder": "1234",
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
         },
         "_pinButton": {
             "type": "sendTo",
@@ -201,21 +209,13 @@
             "alsoDependsOn": ["pairPin", "pairProtocol"],
             "useAdapter": true,
             "showProcess": true,
-            "hidden": "!data.useAppleTv || !data.appleTvIdentifier"
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
         },
         "connectionStatus": {
             "type": "text",
             "hidden": true
         },
         "connectionMessage": {
-            "type": "text",
-            "hidden": true
-        },
-        "appleTvIdentifier": {
-            "type": "text",
-            "hidden": true
-        },
-        "appleTvAddress": {
             "type": "text",
             "hidden": true
         },

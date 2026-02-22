@@ -334,7 +334,7 @@ class PanasonicViera extends utils.Adapter {
                 const identifier = this.config.appleTvIdentifier;
                 const address = this.config.appleTvAddress;
                 if (!identifier && !address) {
-                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Erst Apple TV scannen!' }, obj.callback);
+                    this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Erst Apple TV IP oder Identifier eingeben!' }, obj.callback);
                     return;
                 }
                 // Kill old process
