@@ -283,9 +283,9 @@ class PanasonicViera extends utils.Adapter {
             try {
                 const ip = obj.message && obj.message.ip || this.config.ip;
                 if (!ip) {
+                    await this._saveConnectionStatus('error', 'Keine IP-Adresse eingegeben');
                     this.sendTo(obj.from, obj.command, {
                         result: '\uD83D\uDD34  Keine IP-Adresse eingegeben',
-                        native: { connectionStatus: 'error', connectionMessage: 'Keine IP-Adresse eingegeben' },
                     }, obj.callback);
                     return;
                 }
@@ -293,19 +293,26 @@ class PanasonicViera extends utils.Adapter {
                 const available = await testClient.isAvailable();
                 const msg = available ? `OK \u2014 TV erreichbar (${ip})` : 'Nicht erreichbar \u2014 TV eingeschaltet? TV Remote App aktiviert?';
                 const emoji = available ? '\uD83D\uDFE2' : '\uD83D\uDD34';
+                await this._saveConnectionStatus(available ? 'ok' : 'error', msg);
                 this.sendTo(obj.from, obj.command, {
                     result: `${emoji}  ${msg}`,
-                    native: {
-                        connectionStatus: available ? 'ok' : 'error',
-                        connectionMessage: msg,
-                    },
                 }, obj.callback);
             } catch (err) {
+                await this._saveConnectionStatus('error', `Fehler: ${err.message}`);
                 this.sendTo(obj.from, obj.command, {
                     result: `\uD83D\uDD34  Fehler: ${err.message}`,
-                    native: { connectionStatus: 'error', connectionMessage: `Fehler: ${err.message}` },
                 }, obj.callback);
             }
+        }
+    }
+
+    async _saveConnectionStatus(status, message) {
+        try {
+            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+                native: { connectionStatus: status, connectionMessage: message },
+            });
+        } catch (err) {
+            this.log.debug(`Could not save connection status: ${err.message}`);
         }
     }
 
