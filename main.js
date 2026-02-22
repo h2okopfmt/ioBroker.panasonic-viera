@@ -13,6 +13,7 @@ const REMOTE_KEYS = {
     down: 'NRC_DOWN-ONOFF',
     left: 'NRC_LEFT-ONOFF',
     right: 'NRC_RIGHT-ONOFF',
+    ok: 'NRC_ENTER-ONOFF',
     enter: 'NRC_ENTER-ONOFF',
     back: 'NRC_RETURN-ONOFF',
     menu: 'NRC_MENU-ONOFF',
