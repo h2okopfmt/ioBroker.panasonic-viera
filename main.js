@@ -223,15 +223,20 @@ class PanasonicViera extends utils.Adapter {
                         this.log.info('Powering on TV via Apple TV HDMI-CEC...');
                         try {
                             await VieraClient.turnOnAppleTv(appleTvConfig, this.log);
-                            this.log.info('Apple TV wake sent, switching to TV in 2s...');
-                            this.setTimeout(async () => {
-                                try {
-                                    await this.client.sendKey('NRC_TV-ONOFF');
-                                    this.log.info('Switched to TV tuner');
-                                } catch (err) {
-                                    this.log.warn(`Could not switch to TV tuner: ${err.message}`);
-                                }
-                            }, 2000);
+                            const delay = (this.config.switchDelay !== undefined ? this.config.switchDelay : 2);
+                            if (delay > 0) {
+                                this.log.info(`Apple TV wake sent, switching to TV in ${delay}s...`);
+                                this.setTimeout(async () => {
+                                    try {
+                                        await this.client.sendKey('NRC_TV-ONOFF');
+                                        this.log.info('Switched to TV tuner');
+                                    } catch (err) {
+                                        this.log.warn(`Could not switch to TV tuner: ${err.message}`);
+                                    }
+                                }, delay * 1000);
+                            } else {
+                                this.log.info('Apple TV wake sent (TV switch disabled)');
+                            }
                         } catch (err) {
                             this.log.error(`Apple TV turn_on failed: ${err.message}`);
                         }

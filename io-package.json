@@ -49,6 +49,7 @@
         "ip": "",
         "appleTvInstance": "apple-tv.0",
         "pollingInterval": 15,
+        "switchDelay": 2,
         "connectionStatus": "",
         "connectionMessage": ""
     },
