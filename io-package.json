@@ -48,15 +48,10 @@
     "native": {
         "ip": "",
         "pollingInterval": 15,
-        "connectionStatus": "",
-        "connectionMessage": "",
         "useAppleTv": false,
         "appleTvIdentifier": "",
         "appleTvAddress": "",
         "appleTvName": "",
-        "appleTvAirplayCredentials": "",
-        "appleTvCompanionCredentials": "",
-        "appleTvMrpCredentials": "",
         "pairProtocol": "airplay",
         "pairPin": ""
     },
