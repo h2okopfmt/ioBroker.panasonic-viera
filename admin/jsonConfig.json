@@ -16,6 +16,21 @@
                 "marginBottom": 16
             }
         },
+        "_alive": {
+            "type": "alive",
+            "sm": 12
+        },
+        "_connectionState": {
+            "type": "state",
+            "oid": "info.connection",
+            "label": "TV Verbindung",
+            "sm": 12,
+            "md": 6
+        },
+        "_divider0": {
+            "type": "divider",
+            "sm": 12
+        },
         "ip": {
             "type": "text",
             "label": "IP-Adresse des TVs",
