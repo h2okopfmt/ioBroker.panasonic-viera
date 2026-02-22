@@ -16,16 +16,41 @@
                 "marginBottom": 16
             }
         },
-        "_alive": {
-            "type": "alive",
-            "sm": 12
-        },
-        "_connectionState": {
-            "type": "state",
-            "oid": "info.connection",
-            "label": "TV Verbindung",
+        "_statusOk": {
+            "type": "staticText",
+            "text": "\uD83D\uDFE2  ${data.connectionMessage}",
+            "hidden": "data.connectionStatus !== 'ok'",
             "sm": 12,
-            "md": 6
+            "style": {
+                "fontSize": 18,
+                "fontWeight": "bold",
+                "color": "#4caf50",
+                "padding": "12px 0"
+            }
+        },
+        "_statusError": {
+            "type": "staticText",
+            "text": "\uD83D\uDD34  ${data.connectionMessage}",
+            "hidden": "data.connectionStatus !== 'error'",
+            "sm": 12,
+            "style": {
+                "fontSize": 18,
+                "fontWeight": "bold",
+                "color": "#f44336",
+                "padding": "12px 0"
+            }
+        },
+        "_statusUnknown": {
+            "type": "staticText",
+            "text": "\u26AA  Verbindung noch nicht getestet",
+            "hidden": "data.connectionStatus === 'ok' || data.connectionStatus === 'error'",
+            "sm": 12,
+            "style": {
+                "fontSize": 18,
+                "fontWeight": "bold",
+                "color": "#9e9e9e",
+                "padding": "12px 0"
+            }
         },
         "_divider0": {
             "type": "divider",

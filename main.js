@@ -283,24 +283,21 @@ class PanasonicViera extends utils.Adapter {
                 const ip = obj.message && obj.message.ip || this.config.ip;
                 if (!ip) {
                     this.sendTo(obj.from, obj.command, {
-                        result: '\uD83D\uDD34  Keine IP-Adresse eingegeben',
+                        native: { connectionStatus: 'error', connectionMessage: 'Keine IP-Adresse eingegeben' },
                     }, obj.callback);
                     return;
                 }
                 const testClient = new VieraClient(ip, this.log);
                 const available = await testClient.isAvailable();
-                if (available) {
-                    this.sendTo(obj.from, obj.command, {
-                        result: `\uD83D\uDFE2  OK \u2014 TV erreichbar (${ip})`,
-                    }, obj.callback);
-                } else {
-                    this.sendTo(obj.from, obj.command, {
-                        result: '\uD83D\uDD34  Nicht erreichbar \u2014 TV eingeschaltet? TV Remote App aktiviert?',
-                    }, obj.callback);
-                }
+                this.sendTo(obj.from, obj.command, {
+                    native: {
+                        connectionStatus: available ? 'ok' : 'error',
+                        connectionMessage: available ? `OK \u2014 TV erreichbar (${ip})` : 'Nicht erreichbar \u2014 TV eingeschaltet? TV Remote App aktiviert?',
+                    },
+                }, obj.callback);
             } catch (err) {
                 this.sendTo(obj.from, obj.command, {
-                    result: `\uD83D\uDD34  Fehler: ${err.message}`,
+                    native: { connectionStatus: 'error', connectionMessage: `Fehler: ${err.message}` },
                 }, obj.callback);
             }
         }

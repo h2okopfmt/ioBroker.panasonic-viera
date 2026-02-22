@@ -48,7 +48,9 @@
     "native": {
         "ip": "",
         "mac": "",
-        "pollingInterval": 15
+        "pollingInterval": 15,
+        "connectionStatus": "",
+        "connectionMessage": ""
     },
     "objects": [],
     "instanceObjects": [
