@@ -145,6 +145,18 @@ class PanasonicViera extends utils.Adapter {
             native: {},
         });
 
+        // Apple TV credential storage (states survive config saves)
+        await this.setObjectNotExistsAsync('appletv.airplayCredentials', {
+            type: 'state',
+            common: { name: 'AirPlay Credentials', type: 'string', role: 'text', read: true, write: false, def: '' },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('appletv.companionCredentials', {
+            type: 'state',
+            common: { name: 'Companion Credentials', type: 'string', role: 'text', read: true, write: false, def: '' },
+            native: {},
+        });
+
         // Create all remote button states
         for (const [key, nrcCode] of Object.entries(REMOTE_KEYS)) {
             await this.setObjectAsync(`remote.${key}`, {
@@ -220,7 +232,7 @@ class PanasonicViera extends utils.Adapter {
                 if (state.val) {
                     // Power ON - try Apple TV HDMI-CEC if enabled
                     if (this.config.useAppleTv) {
-                        const appleTvConfig = this._getAppleTvConfig();
+                        const appleTvConfig = await this._getAppleTvConfig();
                         if (appleTvConfig) {
                             this.log.info('Powering on TV via Apple TV HDMI-CEC...');
                             try {
@@ -383,23 +395,21 @@ class PanasonicViera extends utils.Adapter {
     }
 
     async _storePairCredentials(protocol, credentials) {
-        const field = protocol === 'companion' ? 'appleTvCompanionCredentials'
-            : protocol === 'airplay' ? 'appleTvAirplayCredentials'
-                : 'appleTvMrpCredentials';
-        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
-            native: { [field]: credentials },
-        });
-        // Update in-memory config so credentials are available without restart
-        this.config[field] = credentials;
-        this.log.info(`Stored ${protocol} credentials`);
+        const stateId = protocol === 'companion' ? 'appletv.companionCredentials' : 'appletv.airplayCredentials';
+        await this.setStateAsync(stateId, credentials, true);
+        this.log.info(`Stored ${protocol} credentials in state ${stateId}`);
     }
 
-    _getAppleTvConfig() {
+    async _getAppleTvConfig() {
         const id = this.config.appleTvIdentifier;
         const addr = this.config.appleTvAddress;
         if (!id && !addr) return null;
-        const airplay = this.config.appleTvAirplayCredentials || '';
-        const companion = this.config.appleTvCompanionCredentials || '';
+
+        const airplayState = await this.getStateAsync('appletv.airplayCredentials');
+        const companionState = await this.getStateAsync('appletv.companionCredentials');
+        const airplay = (airplayState && airplayState.val) || '';
+        const companion = (companionState && companionState.val) || '';
+
         if (!airplay && !companion) {
             this.log.warn('Apple TV not paired yet. Go to adapter settings and pair first.');
             return null;
@@ -408,7 +418,7 @@ class PanasonicViera extends utils.Adapter {
             identifier: id || '',
             address: addr || '',
             credentials: {
-                mrp: this.config.appleTvMrpCredentials || '',
+                mrp: '',
                 airplay,
                 companion,
             },
