@@ -213,11 +213,13 @@
         },
         "connectionStatus": {
             "type": "text",
-            "hidden": true
+            "hidden": true,
+            "noSave": true
         },
         "connectionMessage": {
             "type": "text",
-            "hidden": true
+            "hidden": true,
+            "noSave": true
         },
         "appleTvName": {
             "type": "text",
@@ -225,15 +227,18 @@
         },
         "appleTvAirplayCredentials": {
             "type": "text",
-            "hidden": true
+            "hidden": true,
+            "noSave": true
         },
         "appleTvCompanionCredentials": {
             "type": "text",
-            "hidden": true
+            "hidden": true,
+            "noSave": true
         },
         "appleTvMrpCredentials": {
             "type": "text",
-            "hidden": true
+            "hidden": true,
+            "noSave": true
         }
     }
 }
