@@ -240,8 +240,8 @@ class PanasonicViera extends utils.Adapter {
                                                 this.log.info(`TV is reachable (attempt ${attempt})`);
                                                 break;
                                             }
-                                            this.log.info(`TV not yet reachable (attempt ${attempt}/5), waiting 3s...`);
-                                            await new Promise(r => setTimeout(r, 3000));
+                                            this.log.info(`TV not yet reachable (attempt ${attempt}/5), waiting 5s...`);
+                                            await new Promise(r => setTimeout(r, 5000));
                                         }
 
                                         if (tvReady) {
@@ -255,7 +255,7 @@ class PanasonicViera extends utils.Adapter {
                                                 } catch (keyErr) {
                                                     this.log.warn(`TV key attempt ${keyAttempt}/3 failed: ${keyErr.message}`);
                                                     if (keyAttempt < 3) {
-                                                        await new Promise(r => setTimeout(r, 3000));
+                                                        await new Promise(r => setTimeout(r, 5000));
                                                     }
                                                 }
                                             }
