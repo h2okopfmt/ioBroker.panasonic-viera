@@ -237,7 +237,36 @@ class PanasonicViera extends utils.Adapter {
                             this.log.info('Powering on TV via Apple TV HDMI-CEC...');
                             try {
                                 await VieraClient.turnOnAppleTv(appleTvConfig, this.log);
-                                this.log.info('Apple TV wake sent');
+                                this.log.info('Apple TV wake command sent successfully');
+
+                                // Auto-switch to TV tuner after CEC power-on
+                                const switchDelay = (this.config.tvSwitchDelay || 10) * 1000;
+                                this.log.info(`Waiting ${switchDelay / 1000}s for TV to boot, then switching to TV tuner...`);
+                                setTimeout(async () => {
+                                    try {
+                                        // Wait for TV to become reachable via SOAP
+                                        let tvReady = false;
+                                        for (let attempt = 1; attempt <= 5; attempt++) {
+                                            tvReady = await this.client.isAvailable();
+                                            if (tvReady) {
+                                                this.log.info(`TV is reachable (attempt ${attempt})`);
+                                                break;
+                                            }
+                                            this.log.info(`TV not yet reachable (attempt ${attempt}/5), waiting 3s...`);
+                                            await new Promise(r => setTimeout(r, 3000));
+                                        }
+
+                                        if (tvReady) {
+                                            this.log.info('Switching TV input to TV tuner (NRC_TV-ONOFF)');
+                                            await this.client.sendKey('NRC_TV-ONOFF');
+                                            this.log.info('TV input switched to tuner');
+                                        } else {
+                                            this.log.warn('TV not reachable after power-on, cannot switch input');
+                                        }
+                                    } catch (err) {
+                                        this.log.warn(`TV input switch failed: ${err.message}`);
+                                    }
+                                }, switchDelay);
                             } catch (err) {
                                 this.log.error(`Apple TV turn_on failed: ${err.message}`);
                             }

@@ -100,7 +100,18 @@
             "type": "checkbox",
             "label": "Apple TV zum Einschalten nutzen (HDMI-CEC)",
             "sm": 12,
-            "help": "Wenn aktiviert, wird der TV \u00fcber ein Apple TV per HDMI-CEC eingeschaltet."
+            "help": "Wenn aktiviert, wird der TV über ein Apple TV per HDMI-CEC eingeschaltet. Nach dem Einschalten wird automatisch auf TV-Tuner umgeschaltet."
+        },
+        "tvSwitchDelay": {
+            "type": "number",
+            "label": "Verzögerung TV-Umschaltung (Sekunden)",
+            "sm": 12,
+            "md": 6,
+            "min": 3,
+            "max": 30,
+            "step": 1,
+            "hidden": "!data.useAppleTv",
+            "help": "Wartezeit nach dem Apple TV Wake bis der TV auf TV-Tuner umgeschaltet wird. Der TV braucht einige Sekunden zum Booten. Standard: 10 Sekunden."
         },
         "_header_atv": {
             "type": "header",
