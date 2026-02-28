@@ -245,9 +245,20 @@ class PanasonicViera extends utils.Adapter {
                                         }
 
                                         if (tvReady) {
-                                            this.log.info('Switching TV input to TV tuner (NRC_TV-ONOFF)');
-                                            await this.client.sendKey('NRC_TV-ONOFF');
-                                            this.log.info('TV input switched to tuner');
+                                            // Retry sending TV key - TV may return 403 right after boot
+                                            for (let keyAttempt = 1; keyAttempt <= 3; keyAttempt++) {
+                                                try {
+                                                    this.log.info(`Switching TV input to TV tuner (NRC_TV-ONOFF), attempt ${keyAttempt}`);
+                                                    await this.client.sendKey('NRC_TV-ONOFF');
+                                                    this.log.info('TV input switched to tuner');
+                                                    break;
+                                                } catch (keyErr) {
+                                                    this.log.warn(`TV key attempt ${keyAttempt}/3 failed: ${keyErr.message}`);
+                                                    if (keyAttempt < 3) {
+                                                        await new Promise(r => setTimeout(r, 3000));
+                                                    }
+                                                }
+                                            }
                                         } else {
                                             this.log.warn('TV not reachable after power-on, cannot switch input');
                                         }
