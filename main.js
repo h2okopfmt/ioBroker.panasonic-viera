@@ -145,18 +145,6 @@ class PanasonicViera extends utils.Adapter {
             native: {},
         });
 
-        // Apple TV credential storage (states survive config saves)
-        await this.setObjectNotExistsAsync('appletv.airplayCredentials', {
-            type: 'state',
-            common: { name: 'AirPlay Credentials', type: 'string', role: 'text', read: true, write: false, def: '' },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('appletv.companionCredentials', {
-            type: 'state',
-            common: { name: 'Companion Credentials', type: 'string', role: 'text', read: true, write: false, def: '' },
-            native: {},
-        });
-
         // Create all remote button states
         for (const [key, nrcCode] of Object.entries(REMOTE_KEYS)) {
             await this.setObjectAsync(`remote.${key}`, {
@@ -424,9 +412,11 @@ class PanasonicViera extends utils.Adapter {
     }
 
     async _storePairCredentials(protocol, credentials) {
-        const stateId = protocol === 'companion' ? 'appletv.companionCredentials' : 'appletv.airplayCredentials';
-        await this.setStateAsync(stateId, credentials, true);
-        this.log.info(`Stored ${protocol} credentials in state ${stateId}`);
+        const configKey = protocol === 'companion' ? 'appleTvCompanionCredentials' : 'appleTvAirplayCredentials';
+        await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+            native: { [configKey]: credentials },
+        });
+        this.log.info(`Stored ${protocol} credentials in adapter config (${configKey})`);
     }
 
     async _getAppleTvConfig() {
@@ -434,10 +424,8 @@ class PanasonicViera extends utils.Adapter {
         const addr = this.config.appleTvAddress;
         if (!id && !addr) return null;
 
-        const airplayState = await this.getStateAsync('appletv.airplayCredentials');
-        const companionState = await this.getStateAsync('appletv.companionCredentials');
-        const airplay = (airplayState && airplayState.val) || '';
-        const companion = (companionState && companionState.val) || '';
+        const airplay = this.config.appleTvAirplayCredentials || '';
+        const companion = this.config.appleTvCompanionCredentials || '';
 
         if (!airplay && !companion) {
             this.log.warn('Apple TV not paired yet. Go to adapter settings and pair first.');

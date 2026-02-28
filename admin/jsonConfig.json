@@ -236,20 +236,42 @@
             "type": "text",
             "hidden": true
         },
+        "_divider4": {
+            "type": "divider",
+            "sm": 12,
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
+        },
+        "_credHeader": {
+            "type": "header",
+            "text": "Credentials (manuell oder via Pairing)",
+            "size": 5,
+            "sm": 12,
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)"
+        },
+        "_credHelp": {
+            "type": "staticText",
+            "text": "Falls Pairing in Docker nicht klappt, vom Host pairen: atvremote -m --id <ID> --address <IP> --protocol airplay --port 7000 pair (bzw. --protocol companion --port 49153) und Credentials hier eintragen.",
+            "sm": 12,
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)",
+            "style": {
+                "fontSize": 12,
+                "color": "#999",
+                "marginBottom": 8
+            }
+        },
         "appleTvAirplayCredentials": {
             "type": "text",
-            "hidden": true,
-            "noSave": true
+            "label": "AirPlay Credentials",
+            "sm": 12,
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)",
+            "help": "AirPlay Credentials vom Pairing. Werden automatisch gesetzt oder manuell eingetragen."
         },
         "appleTvCompanionCredentials": {
             "type": "text",
-            "hidden": true,
-            "noSave": true
-        },
-        "appleTvMrpCredentials": {
-            "type": "text",
-            "hidden": true,
-            "noSave": true
+            "label": "Companion Credentials",
+            "sm": 12,
+            "hidden": "!data.useAppleTv || (!data.appleTvIdentifier && !data.appleTvAddress)",
+            "help": "Companion Credentials vom Pairing. Werden automatisch gesetzt oder manuell eingetragen."
         }
     }
 }
