@@ -157,6 +157,8 @@
             "sm": 12,
             "md": 4,
             "hidden": "!data.useAppleTv",
+            "jsonData": "{\"ip\": \"${data.appleTvAddress}\"}",
+            "alsoDependsOn": ["appleTvAddress"],
             "useAdapter": true,
             "showProcess": true
         },

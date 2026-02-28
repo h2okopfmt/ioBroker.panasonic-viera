@@ -340,7 +340,8 @@ class PanasonicViera extends utils.Adapter {
 
         if (obj.command === 'scanAppleTv') {
             try {
-                const devices = await VieraClient.scanAppleTvs(this.log);
+                const targetIp = (obj.message && obj.message.ip) || this.config.appleTvAddress || '';
+                const devices = await VieraClient.scanAppleTvs(this.log, targetIp || undefined);
                 if (devices.length === 0) {
                     this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Kein Apple TV gefunden' }, obj.callback);
                 } else {
