@@ -246,17 +246,31 @@ class PanasonicViera extends utils.Adapter {
 
                                         if (tvReady) {
                                             // Retry sending TV key - TV may return 403 right after boot
+                                            let tvKeySent = false;
                                             for (let keyAttempt = 1; keyAttempt <= 3; keyAttempt++) {
                                                 try {
                                                     this.log.info(`Switching TV input to TV tuner (NRC_TV-ONOFF), attempt ${keyAttempt}`);
                                                     await this.client.sendKey('NRC_TV-ONOFF');
                                                     this.log.info('TV input switched to tuner');
+                                                    tvKeySent = true;
                                                     break;
                                                 } catch (keyErr) {
                                                     this.log.warn(`TV key attempt ${keyAttempt}/3 failed: ${keyErr.message}`);
                                                     if (keyAttempt < 3) {
                                                         await new Promise(r => setTimeout(r, 5000));
                                                     }
+                                                }
+                                            }
+
+                                            // Send OK/Enter to confirm any on-screen dialog
+                                            if (tvKeySent) {
+                                                await new Promise(r => setTimeout(r, 4000));
+                                                try {
+                                                    this.log.info('Sending OK to confirm tuner switch');
+                                                    await this.client.sendKey('NRC_ENTER-ONOFF');
+                                                    this.log.info('OK sent');
+                                                } catch (okErr) {
+                                                    this.log.warn(`OK key failed: ${okErr.message}`);
                                                 }
                                             }
                                         } else {
