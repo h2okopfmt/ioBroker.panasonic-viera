@@ -1,6 +1,13 @@
 #!/bin/bash
-# Deploy Panasonic Viera adapter to ioBroker Docker container on graw
-HOST="graw@graw"
+# Deploy Panasonic Viera adapter to ioBroker Docker container
+# Usage: ./deploy.sh        -> test server (graw)
+#        ./deploy.sh prod   -> production (192.168.1.62)
+TARGET="${1:-test}"
+if [ "$TARGET" = "prod" ]; then
+    HOST="docker@192.168.1.62"
+else
+    HOST="graw@graw"
+fi
 CONTAINER="iobroker"
 DEST="/opt/iobroker/node_modules/iobroker.panasonic-viera"
 DIR="$(cd "$(dirname "$0")" && pwd)"
