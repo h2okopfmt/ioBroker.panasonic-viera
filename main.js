@@ -139,14 +139,7 @@ class PanasonicViera extends utils.Adapter {
             native: {},
         });
 
-        // Remote control channel
-        await this.setObjectNotExistsAsync('remote', {
-            type: 'channel',
-            common: { name: 'Remote Control' },
-            native: {},
-        });
-
-        // Apple TV credential storage (states survive config saves)
+        // Apple TV credential storage (states survive config saves from the admin UI)
         await this.setObjectNotExistsAsync('appletv.airplayCredentials', {
             type: 'state',
             common: { name: 'AirPlay Credentials', type: 'string', role: 'text', read: true, write: false, def: '' },
@@ -155,6 +148,13 @@ class PanasonicViera extends utils.Adapter {
         await this.setObjectNotExistsAsync('appletv.companionCredentials', {
             type: 'state',
             common: { name: 'Companion Credentials', type: 'string', role: 'text', read: true, write: false, def: '' },
+            native: {},
+        });
+
+        // Remote control channel
+        await this.setObjectNotExistsAsync('remote', {
+            type: 'channel',
+            common: { name: 'Remote Control' },
             native: {},
         });
 
@@ -238,7 +238,61 @@ class PanasonicViera extends utils.Adapter {
                             this.log.info('Powering on TV via Apple TV HDMI-CEC...');
                             try {
                                 await VieraClient.turnOnAppleTv(appleTvConfig, this.log);
-                                this.log.info('Apple TV wake sent');
+                                this.log.info('Apple TV wake command sent successfully');
+
+                                // Auto-switch to TV tuner after CEC power-on
+                                const switchDelay = (this.config.tvSwitchDelay || 10) * 1000;
+                                this.log.info(`Waiting ${switchDelay / 1000}s for TV to boot, then switching to TV tuner...`);
+                                setTimeout(async () => {
+                                    try {
+                                        // Wait for TV to become reachable via SOAP
+                                        let tvReady = false;
+                                        for (let attempt = 1; attempt <= 5; attempt++) {
+                                            tvReady = await this.client.isAvailable();
+                                            if (tvReady) {
+                                                this.log.info(`TV is reachable (attempt ${attempt})`);
+                                                break;
+                                            }
+                                            this.log.info(`TV not yet reachable (attempt ${attempt}/5), waiting 5s...`);
+                                            await new Promise(r => setTimeout(r, 5000));
+                                        }
+
+                                        if (tvReady) {
+                                            // Retry sending TV key - TV may return 403 right after boot
+                                            let tvKeySent = false;
+                                            for (let keyAttempt = 1; keyAttempt <= 3; keyAttempt++) {
+                                                try {
+                                                    this.log.info(`Switching TV input to TV tuner (NRC_TV-ONOFF), attempt ${keyAttempt}`);
+                                                    await this.client.sendKey('NRC_TV-ONOFF');
+                                                    this.log.info('TV input switched to tuner');
+                                                    tvKeySent = true;
+                                                    break;
+                                                } catch (keyErr) {
+                                                    this.log.warn(`TV key attempt ${keyAttempt}/3 failed: ${keyErr.message}`);
+                                                    if (keyAttempt < 3) {
+                                                        await new Promise(r => setTimeout(r, 5000));
+                                                    }
+                                                }
+                                            }
+
+                                            // Send OK/Enter to confirm any on-screen dialog
+                                            if (tvKeySent) {
+                                                await new Promise(r => setTimeout(r, 4000));
+                                                try {
+                                                    this.log.info('Sending OK to confirm tuner switch');
+                                                    await this.client.sendKey('NRC_ENTER-ONOFF');
+                                                    this.log.info('OK sent');
+                                                } catch (okErr) {
+                                                    this.log.warn(`OK key failed: ${okErr.message}`);
+                                                }
+                                            }
+                                        } else {
+                                            this.log.warn('TV not reachable after power-on, cannot switch input');
+                                        }
+                                    } catch (err) {
+                                        this.log.warn(`TV input switch failed: ${err.message}`);
+                                    }
+                                }, switchDelay);
                             } catch (err) {
                                 this.log.error(`Apple TV turn_on failed: ${err.message}`);
                             }
@@ -324,7 +378,8 @@ class PanasonicViera extends utils.Adapter {
 
         if (obj.command === 'scanAppleTv') {
             try {
-                const devices = await VieraClient.scanAppleTvs(this.log);
+                const targetIp = (obj.message && obj.message.ip) || this.config.appleTvAddress || '';
+                const devices = await VieraClient.scanAppleTvs(this.log, targetIp || undefined);
                 if (devices.length === 0) {
                     this.sendTo(obj.from, obj.command, { result: '\uD83D\uDD34  Kein Apple TV gefunden' }, obj.callback);
                 } else {
@@ -396,13 +451,23 @@ class PanasonicViera extends utils.Adapter {
     }
 
     async _storePairCredentials(protocol, credentials) {
+        // Store in both places: the state is the primary source (survives admin
+        // config saves), the config copy acts as backup and legacy compatibility.
         const stateId = protocol === 'companion' ? 'appletv.companionCredentials' : 'appletv.airplayCredentials';
         await this.setStateAsync(stateId, credentials, true);
-        this.log.info(`Stored ${protocol} credentials in state ${stateId}`);
+        const configKey = protocol === 'companion' ? 'appleTvCompanionCredentials' : 'appleTvAirplayCredentials';
+        try {
+            await this.extendForeignObjectAsync(`system.adapter.${this.namespace}`, {
+                native: { [configKey]: credentials },
+            });
+        } catch (err) {
+            this.log.warn(`Could not mirror ${protocol} credentials to adapter config: ${err.message}`);
+        }
+        this.log.info(`Stored ${protocol} credentials in state ${stateId} (mirrored to config ${configKey})`);
     }
 
     /**
-     * One-time migration: older versions stored credentials in the adapter
+     * One-time migration: older versions stored credentials only in the adapter
      * config (native). Copy them into the states if those are still empty.
      * Native fields are left untouched as a backup.
      */
@@ -426,6 +491,7 @@ class PanasonicViera extends utils.Adapter {
         const addr = this.config.appleTvAddress;
         if (!id && !addr) return null;
 
+        // States are the primary credential source, adapter config the fallback
         const airplayState = await this.getStateAsync('appletv.airplayCredentials');
         const companionState = await this.getStateAsync('appletv.companionCredentials');
         const airplay = (airplayState && airplayState.val) || this.config.appleTvAirplayCredentials || '';

@@ -53,7 +53,10 @@
         "appleTvAddress": "",
         "appleTvName": "",
         "pairProtocol": "airplay",
-        "pairPin": ""
+        "pairPin": "",
+        "tvSwitchDelay": 10,
+        "appleTvAirplayCredentials": "",
+        "appleTvCompanionCredentials": ""
     },
     "objects": [],
     "instanceObjects": [
